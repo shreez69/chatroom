@@ -99,9 +99,10 @@ body {
 }
 .chat-screen .messages {
   width: 100%;
-  height: calc(100% - 100px);
+  height: calc(100% - 50px);
   background: #6164b7;
   overflow: auto;
+  padding-bottom: 60px;
 }
 .chat-screen .messages .message {
   font-family: "Times New Roman", Times, serif;
@@ -137,15 +138,26 @@ body {
 .chat-screen .messages .message .text {
   word-wrap: break-word;
 }
+.chat-screen .typebox {
+  display: flex;
+  padding: 10px;
+  background: #022062;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
 .chat-screen .typebox input {
   font-family: "Times New Roman", Times, serif;
   flex: 1;
-  height: 30px;
+  height: 40px;
   background: #323487;
   border: 1px solid #000000;
   border-radius: 10px;
   font-size: 20px;
   outline: none;
+  margin-right: 10px;
+  padding: 0 10px;
 }
 .chat-screen .typebox button {
   padding: 5px 10px;
