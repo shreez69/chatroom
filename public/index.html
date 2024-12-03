@@ -3,36 +3,191 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <link rel="stylesheet" type="text/css" href="style.css" />
+    <title>Chatroom</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      /* Inline styles to ensure purple background consistency */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: #6a1b9a; /* Purple background */
+        color: #ffffff; /* White text */
+      }
+
+      h1, h2 {
+        text-align: center;
+        color: #ffffff;
+      }
+
+      .app {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+
+      .screen {
+        display: none;
+        text-align: center;
+        padding: 20px;
+        border-radius: 8px;
+        background-color: rgba(255, 255, 255, 0.1);
+        width: 300px;
+      }
+
+      .screen.active {
+        display: block;
+      }
+
+      .form-input {
+        margin: 10px 0;
+      }
+
+      .form-input label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 14px;
+      }
+
+      .form-input input, .form-input button {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+
+      .form-input input {
+        margin-bottom: 10px;
+      }
+
+      .form-input button {
+        background-color: #8e24aa; /* Darker purple */
+        color: white;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      .form-input button:hover {
+        background-color: #6a1b9a;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #ffffff;
+        color: #000000;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        z-index: 1000;
+      }
+
+      .modal-content {
+        margin: 0;
+      }
+
+      .close {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        color: red;
+        font-size: 20px;
+        cursor: pointer;
+      }
+    </style>
   </head>
   <body>
     <div class="app">
-      <div class="screen join-screen active">
+      <!-- Chatroom Heading -->
+      <div class="screen heading-screen active">
+        <h1>Chatroom</h1>
         <div class="form">
-          <h2>Join Chatroom</h2>
           <div class="form-input">
-            <label>Username</label>
-            <input type="text" id="username" />
+            <button id="show-signin">Sign In</button>
           </div>
           <div class="form-input">
-            <button id="join-user">Join</button>
+            <button id="show-signup">Sign Up</button>
           </div>
         </div>
       </div>
-      <div class="screen chat-screen">
+
+      <!-- Sign In Form -->
+      <div class="screen signin-screen">
+        <h2>Sign In</h2>
+        <div class="form">
+          <div class="form-input">
+            <label>Username</label>
+            <input type="text" id="signin-username" placeholder="Enter your username" />
+          </div>
+          <div class="form-input">
+            <label>Password</label>
+            <input type="password" id="signin-password" placeholder="Enter your password" />
+          </div>
+          <div class="form-input">
+            <button id="signin-send-otp">Sign In</button>
+          </div>
+          <div class="form-input">
+            <button id="back-to-main-1">Go Back</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sign Up Form -->
+      <div class="screen signup-screen">
+        <h2>Sign Up</h2>
+        <div class="form">
+          <div class="form-input">
+            <label>Username</label>
+            <input type="text" id="signup-username" placeholder="Create a username" />
+          </div>
+          <div class="form-input">
+            <label>Email</label>
+            <input type="email" id="signup-email" placeholder="Enter your email" />
+          </div>
+          <div class="form-input">
+            <label>Password</label>
+            <input type="password" id="signup-password" placeholder="Create a password" />
+          </div>
+          <div class="form-input">
+            <button id="signup-send-otp">Sign Up</button>
+          </div>
+          <div class="form-input">
+            <button id="back-to-main-2">Go Back</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- OTP Modal -->
+      <div id="otp-modal" class="modal">
+        <div class="modal-content">
+          <span class="close" onclick="closeModal('otp-modal')">&times;</span>
+          <h2>Enter OTP</h2>
+          <input type="text" id="otp-input" placeholder="Enter OTP" required />
+          <button id="verify-otp">Verify OTP</button>
+        </div>
+      </div>
+
+      <!-- Chatroom Screen -->
+      <div class="screen chatroom-screen">
         <div class="header">
-          <div class="logo">Chatroom</div>
+          <div class="logo">Welcome to Chatroom</div>
           <button id="exit-chat">Exit</button>
         </div>
-        <div class="messages">
+        <div class="messages"></div>
         <div class="typebox">
-          <input type="text" id="message-input" />
+          <input type="text" id="message-input" placeholder="Type your message..." />
           <button id="send-message">Send</button>
         </div>
       </div>
     </div>
-    <script type="text/javascript" src="socket.io/socket.io.js"></script>
-    <script type="text/javascript" src="code.js"></script>
+
+    <script src="socket.io/socket.io.js"></script>
+    <script src="code.js"></script>
   </body>
 </html>

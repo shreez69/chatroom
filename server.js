@@ -1,60 +1,87 @@
-const express = require("express");
-const path = require("path");
-const jwt = require("jsonwebtoken");
-const { Server } = require("socket.io");
-const http = require("http");
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatroom</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- Chatroom Heading -->
+      <h1 class="heading">Chatroom</h1>
 
-const SECRET_KEY = "your_secret_key"; // Replace with a secure key
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+      <!-- Options for Sign In and Sign Up -->
+      <div class="screen options-screen active">
+        <button id="show-signin">Sign In</button>
+        <button id="show-signup">Sign Up</button>
+      </div>
 
-// Middleware to serve static files
-app.use(express.static(path.join(__dirname, "/public")));
+      <!-- Sign In Form -->
+      <div class="screen signin-screen">
+        <h2>Sign In</h2>
+        <div class="form">
+          <div class="form-input">
+            <label>Username</label>
+            <input type="text" id="signin-username" placeholder="Enter your username" />
+          </div>
+          <div class="form-input">
+            <label>Password</label>
+            <input type="password" id="signin-password" placeholder="Enter your password" />
+          </div>
+          <div class="form-input">
+            <button id="signin-send-otp">Send OTP</button>
+          </div>
+        </div>
+      </div>
 
-// In-memory storage for simplicity (use a database for production)
-const activeUsers = {};
+      <!-- Sign Up Form -->
+      <div class="screen signup-screen">
+        <h2>Sign Up</h2>
+        <div class="form">
+          <div class="form-input">
+            <label>Username</label>
+            <input type="text" id="signup-username" placeholder="Create a username" />
+          </div>
+          <div class="form-input">
+            <label>Email</label>
+            <input type="email" id="signup-email" placeholder="Enter your email" />
+          </div>
+          <div class="form-input">
+            <label>Password</label>
+            <input type="password" id="signup-password" placeholder="Create a password" />
+          </div>
+          <div class="form-input">
+            <button id="signup-send-otp">Send OTP</button>
+          </div>
+        </div>
+      </div>
 
-// Middleware to verify JWT token
-function verifyToken(socket, next) {
-    const token = socket.handshake.auth.token;
-    if (!token) {
-        return next(new Error("Authentication error: Token required"));
-    }
+      <!-- OTP Modal -->
+      <div id="otp-modal" class="modal">
+        <div class="modal-content">
+          <span class="close" onclick="closeModal('otp-modal')">&times;</span>
+          <h2>Enter OTP</h2>
+          <input type="text" id="otp-input" placeholder="Enter OTP" required />
+          <button id="verify-otp">Verify OTP</button>
+        </div>
+      </div>
 
-    try {
-        const decoded = jwt.verify(token, SECRET_KEY);
-        socket.user = decoded; // Add user data to socket object
-        next();
-    } catch (err) {
-        next(new Error("Authentication error: Invalid token"));
-    }
-}
+      <!-- Chatroom Screen -->
+      <div class="screen chatroom-screen">
+        <div class="header">
+          <div class="logo">Welcome to Chatroom</div>
+          <button id="exit-chat">Exit</button>
+        </div>
+        <div class="messages"></div>
+        <div class="typebox">
+          <input type="text" id="message-input" placeholder="Type your message..." />
+          <button id="send-message">Send</button>
+        </div>
+      </div>
+    </div>
 
-// Socket.IO middleware to verify JWT
-io.use(verifyToken);
-
-// Socket.IO connection handling
-io.on("connection", (socket) => {
-    const username = socket.user.email;
-
-    // Add user to activeUsers
-    activeUsers[username] = socket.id;
-    socket.broadcast.emit("update", `${username} joined the conversation`);
-
-    // Handle chat messages
-    socket.on("chat", (message) => {
-        io.emit("chat", { username, message });
-    });
-
-    // Handle user disconnection
-    socket.on("disconnect", () => {
-        delete activeUsers[username];
-        socket.broadcast.emit("update", `${username} left the conversation`);
-    });
-});
-
-// Start the server
-server.listen(5000, () => {
-    console.log("Server is running on http://localhost:5000");
-});
+    <script src="socket.io/socket.io.js"></script>
+    <script src="code.js"></script>
+  </body>
+</html>
