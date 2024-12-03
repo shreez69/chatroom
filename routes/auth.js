@@ -2,12 +2,15 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const connectDB = require('../config/db'); // Adjust the path to your db.js file
+const connectDB = require('../config/db');
+require('dotenv').config();
 
 const router = express.Router();
 
-const SECRET_KEY = 'your_secret_key'; // Use a secure key for JWT
-const OTP_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes in milliseconds
+const SECRET_KEY = process.env.SECRET_KEY;
+const EMAIL = process.env.EMAIL;
+const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
+const OTP_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes
 
 let db;
 
@@ -17,17 +20,14 @@ let db;
 })();
 
 // Helper function to send OTP via email
-async function sendOtpEmail(email, otp) {
+const sendOtpEmail = async (email, otp) => {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
-        auth: {
-            user: 'your-email@gmail.com', // Replace with your email
-            pass: 'your-email-password', // Replace with your email password
-        },
+        auth: { user: EMAIL, pass: EMAIL_PASSWORD },
     });
 
     const mailOptions = {
-        from: 'your-email@gmail.com',
+        from: EMAIL,
         to: email,
         subject: 'Your OTP Code',
         text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
@@ -38,15 +38,18 @@ async function sendOtpEmail(email, otp) {
         console.log(`OTP sent to ${email}`);
     } catch (err) {
         console.error('Failed to send OTP:', err);
+        throw new Error('Failed to send OTP');
     }
-}
+};
 
 // Register a new user
 router.post('/register', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Validate email and password
+        if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+        const hashedPassword = await bcrypt.hash(password, 12);
 
         const result = await db.collection('users').insertOne({
             email,
@@ -73,16 +76,21 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid email or password' });
         }
 
-        // Generate OTP and save it to the database
+        // Prevent frequent OTP requests
+        const now = Date.now();
+        if (user.lastOtpRequest && now - user.lastOtpRequest < 60000) {
+            return res.status(429).json({ error: 'OTP request too frequent' });
+        }
+
+        // Generate OTP and save to database
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpiry = new Date(Date.now() + OTP_EXPIRY_TIME);
+        const otpExpiry = new Date(now + OTP_EXPIRY_TIME);
 
         await db.collection('users').updateOne(
             { email },
-            { $set: { otp, otpExpiry } }
+            { $set: { otp, otpExpiry, lastOtpRequest: now } }
         );
 
-        // Send OTP to the user's email
         await sendOtpEmail(email, otp);
 
         res.status(200).json({ message: 'OTP sent to your email' });
@@ -103,13 +111,12 @@ router.post('/verify-otp', async (req, res) => {
             return res.status(400).json({ error: 'Invalid or expired OTP' });
         }
 
-        // Clear OTP after successful verification
+        // Clear OTP and generate JWT
         await db.collection('users').updateOne(
             { email },
             { $set: { otp: null, otpExpiry: null } }
         );
 
-        // Generate JWT token
         const token = jwt.sign({ email }, SECRET_KEY, { expiresIn: '1h' });
 
         res.status(200).json({ message: 'OTP verified successfully', token });

@@ -1,17 +1,18 @@
 const { MongoClient } = require('mongodb');
+require('dotenv').config(); 
+const uri = process.env.MONGO_URI;
 
-const uri = "mongodb+srv://admin:admin1234@cluster0.utlef.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const client = new MongoClient(uri);
 
-async function testConnection() {
-    const client = new MongoClient(uri);
+async function connectDB() {
     try {
         await client.connect();
-        console.log("Connected to MongoDB!");
-    } catch (error) {
-        console.error("Error connecting to MongoDB:", error);s
-    } finally {
-        await client.close();
+        console.log('Connected to MongoDB');
+        return client.db(process.env.DB_NAME); 
+    } catch (err) {
+        console.error('Database connection error:', err);
+        process.exit(1);
     }
 }
 
-testConnection();
+module.exports = connectDB;
